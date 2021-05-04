@@ -14,7 +14,7 @@ from utils import *
 class Main(object):
     def __init__(self):
         pygame.init()
-        self.resolution = 800, 600
+        self.resolution = 1920, 1080
         #self.camera = Camera(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.2)
         #self.projectionMatrix = perspective_fov(45.0, self.resolution[0]/self.resolution[1], 0.1, 100.0)
         self.identity = np.array([ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])

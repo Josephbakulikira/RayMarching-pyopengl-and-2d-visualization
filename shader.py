@@ -41,13 +41,6 @@ float SDFsphere(vec3 pos, float radius)
     return length(pos) - radius;
 }
 
-float SDFspheres (vec3 p) {
-    float l = length(p);
-    float s = 5.0;
-    vec3 sphere = vec3(0.0, 0.0, 0.0);
-    return length(mod(sphere.xyz - p, s) - vec3(s/2.0)) - u_time * sin(0.1) ;
-}
-
 
 float SDFcube( vec3 p, vec3 b )
 {
@@ -67,20 +60,33 @@ float SDFtorus( vec3 p, vec2 t )
   return length(q)-t.y;
 }
 
+float SDFsphereMod (vec3 p, float s) {
+    float l = length(p);
+    vec3 sphere = vec3(1.0, 1.0,1.0);
+    return length(mod(sphere.xyz - p, s) - vec3(s/2.0)) - .5 ;
+}
+
+
+
 float WeirdDisplacement(vec3 pos, float val){
     float displ = sin(4.0 * pos.x) * cos(4.0 * pos.y) * sin(4.0 * pos.z) * 0.25 * val;
     return displ;
 }
 
+
+
 //scene informations
 float WorldSDF(in vec3 p)
 {
-    //float torus = SDFtorus(p, vec2(1.0, 0.5));
+    float torus = SDFtorus(p, vec2(1.0, 0.5));
     float sphere = SDFsphere(p, 1.0);
-    float plane = dot(p + vec3(0, 1, 0), normalize(vec3(0, 1, 0)) ) ;
-    float dist = min(sphere, plane);
-
-    return sphere;
+    //float modSphere = SDFsphereMod(p, 5.0);
+    //float plane = dot(p + vec3(0, 1, 0), normalize(vec3(0, 1, 0)));
+    //float displacements = WeirdDisplacement(p, u_time);
+    float sphereTorus = differenceSDF(sphere, torus);
+    float c = 5.0;
+    vec3 q = mod(p+0.5*c,c)-0.5*c;
+    return sphereTorus;
 }
 
 
@@ -126,16 +132,16 @@ vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction, vec3 gradColor)
             // in case we hit something
             vec3 normal = surface_normal(current_position);
 
-            vec3 light_position = vec3(0, 5, 7.0);
+            vec3 light_position = vec3(-u_mouse.x, u_mouse.y, 4.0);
 
             vec3 direction_to_light = normalize(current_position - light_position);
 
             float diffuse_intensity = max(0.0, pow(dot(normal, direction_to_light), 2.0));
 
-            //return normal * 0.5 + 0.5 * diffuse_intensity;
+            return normal * 0.5 + 0.5 * diffuse_intensity;
             //return gradColor * diffuse_intensity;
 
-            return vec3(1.0) * diffuse_intensity;
+            return vec3(1.0) * diffuse_intensity ;
         }
 
         if (total_distance_traveled > max_distance) // miss
@@ -158,7 +164,7 @@ void main()
     uv.x *= u_resolution.x / u_resolution.y;
 
     //vec3 ray_origin = vec3(0.2, 0.1, -5.0 + sin(cos(u_time)));
-    vec3 ray_origin = vec3(0.0, 0.0, -5.0 );
+    vec3 ray_origin = vec3(0.0, 0.0, -3.0 );
     vec3 ray_direction = vec3(uv, 1.0);
 
     vec3 gradColor = 0.5 + 0.5 * cos(u_time + uv.xyx + vec3(0.0, 2.0, 4.0));
