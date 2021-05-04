@@ -36,7 +36,7 @@ for i in range(object_count):
     obj.outline = 0
     objects.append(obj)
 
-autoRotation = False
+autoRotation = True
 
 run = True
 while run:
