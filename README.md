@@ -1,4 +1,4 @@
-# RayMarching-pyopengl-and-2d-visualization
+# RayMarching-pyopengl-
 
 #### gonna update it later, this code is not finished
 
@@ -11,3 +11,6 @@
 ![Screenshot (68)](https://user-images.githubusercontent.com/48150537/117065391-15802380-ad45-11eb-8cf1-312a03619d07.png)
 
 ![Screenshot (69)](https://user-images.githubusercontent.com/48150537/117072766-968fe880-ad4e-11eb-9972-d9c3f933aa9c.png)
+
+2d visualization
+![Screenshot (70)](https://user-images.githubusercontent.com/48150537/117073113-14ec8a80-ad4f-11eb-80ab-e9426ea4c5af.png)
