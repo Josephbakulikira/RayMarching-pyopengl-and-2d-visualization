@@ -50,6 +50,8 @@ class Vector3:
     def toMatrix(self):
         return [[self.x], [self.y], [self.z]]
 
+    def toArray4(self):
+        return [self.x, self.y, self.z, 0.0]
 
     def __repr__(self):
         return f'{self.x} , {self.y}, {self.z}'

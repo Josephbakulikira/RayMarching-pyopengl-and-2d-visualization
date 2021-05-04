@@ -11,61 +11,13 @@ from math import cos, sin, pi
 from Vector import *
 from utils import *
 
-class Camera(object):
-    def __init__(self, initialPosition, startUp, startYaw, startPitch, startMovespeed, startTurnSpeed):
-        self.position = initialPosition
-        self.worldUp = startUp
-        self.yaw = startYaw
-        self.pitch = startPitch
-        self.moveSpeed = startMovespeed
-        self.turnSpeed =startMovespeed
-        self.front = Vector3(0.0, 0.0, -1.0)
-        self.right = Vector3(0.0, 0.0, 0.0)
-        self.up = Vector3(0.0, 0.0, 0.0)
-
-    def update(self):
-        self.front.x = cos(toRadians(self.yaw) * cos(toRadians(self.pitch)))
-        self.front.y = sin(toRadians(self.pitch))
-        self.front.z = sin(toRadians(yaw) * sin(toRadians(self.pitch)))
-
-        self.front = Vector3.normalize(front)
-        self.right = Vector3.normalize(Vector3.cross(front, worldUp))
-        self.up = Vector3.normalize(Vector3.cross(right, front))
-
-    def mouseHandle(self, xChange, yChange):
-        xChange *= self.turnSpeed
-        yChange *= self.turnSpeed
-
-        yaw += xChange
-        pitch += yChange
-
-        if pitch > 89.0:
-            pitch = 89.0
-        if pitch < -89.0:
-            pitch = -89.0
-        self.update()
-
-    def KeyControls(self, deltaTime):
-        velocity = moveSpeed * deltaTime
-        key = pygame.key.get_pressed()
-        if key[pygame.K_w] or key[pygame.K_UP]:
-            self.position = Vector3( ( self.position.x + self.front.x )*velocity,  ( self.position.y + self.front.y )*velocity, ( self.position.z + self.front.z )*velocity )
-        if key[pygame.K_s] or key[pygame.K_DOWN]:
-            self.position = Vector3( ( self.position.x - self.front.x )*velocity,  ( self.position.y - self.front.y )*velocity, ( self.position.z - self.front.z )*velocity )
-        if key[pygame.K_d] or key[pygame.K_RIGHT]:
-            self.position = Vector3( ( self.position.x + self.right.x )*velocity,  ( self.position.y + self.right.y )*velocity, ( self.position.z + self.right.z )*velocity )
-        if key[pygame.K_a] or key[pygame.K_LEFT]:
-            self.position = Vector3( ( self.position.x - self.right.x )*velocity,  ( position.y - self.right.y )*velocity, ( position.z - self.right.z )*velocity )
-
-    def calculate_view_matrix(self):
-        print(lookAt(self.position, self.position+self.front, self.up))
-
 class Main(object):
     def __init__(self):
         pygame.init()
         self.resolution = 800, 600
-        self.camera = Camera(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.2)
-
+        #self.camera = Camera(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.2)
+        #self.projectionMatrix = perspective_fov(45.0, self.resolution[0]/self.resolution[1], 0.1, 100.0)
+        self.identity = np.array([ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         pygame.display.set_mode(self.resolution, DOUBLEBUF | OPENGL)
         pygame.display.set_caption('Ray Marching')
 
@@ -83,14 +35,17 @@ class Main(object):
         # Uniform variables
         self.uniformMouse = glGetUniformLocation(self.shader, 'u_mouse')
         self.uniformTime = glGetUniformLocation(self.shader, 'u_time')
-        self.uniformView = glGetUniformLocation(self.shader, 'u_view')
+        #self.uniformProjection = glGetUniformLocation(self.shader, 'u_projection')
+        self.uniformModel = glGetUniformLocation(self.shader, 'u_model')
         glUseProgram(self.shader)
 
+
+        # self.uniformCameraPosition = glGetUniformLocation(self.shader, "u_camPosition")
+        # self.uniformOrientation = glGetUniformLocation(self.shader, 'u_orientation')
+        # self.uniformViewDistance = glGetUniformLocation(self.shader, 'u_viewDistance')
+        #self.uniformView = glGetUniformLocation(self.shader, "u_view")
         self.uniformResolution = glGetUniformLocation(self.shader, 'u_resolution')
         glUniform2f(self.uniformResolution, *self.resolution)
-
-
-        self.uniformCameraPosition = glGetUniformLocation(self.shader, "u_camPosition")
 
         # generate Vertex array objects
         self.vao = glGenVertexArrays(1)
@@ -106,9 +61,6 @@ class Main(object):
         self.clock = pygame.time.Clock()
 
     def mainloop(self):
-        cam_x, cam_y = 0, 0;
-        lastX, lastY, xChange, yChange = 0, 0, 0, 0
-        FirstMove = True
         while 1:
             delta = self.clock.tick(8192)
             deltaTime = delta/1000.0
@@ -127,31 +79,16 @@ class Main(object):
 
             glUseProgram(self.shader)
 
-            camera.KeyControls(deltaTime)
-            camera.mouseHandle(xChange, yChange)
-
             # mouse coordinate in range of (-1, 1)
             mx, my = pygame.mouse.get_pos()
-
-            if FirstMove == True:
-                lastX = mx
-                lastY = my
-                FirstMove = False
-
-            xChange = mx - lastX
-            yChange = lastY - my
-
-            lastX = mx
-            lastY = my
 
             mx = (1.0 / self.resolution[0] * mx) * 2.0 - 1.0
             my = (1.0 / self.resolution[1] * my) * 2.0 - 1.0
 
 
-            glUniform2f(self.uniformCameraPosition, cam_x, cam_y)
             glUniform2f(self.uniformMouse, mx, my)
             glUniform1f(self.uniformTime, pygame.time.get_ticks() / 1000.0)
-            glUniform3f(self.uniformView, )
+
             # binding vertex arrays objects
             glBindVertexArray(self.vao)
             glDrawArrays(GL_QUADS, 0, 4)

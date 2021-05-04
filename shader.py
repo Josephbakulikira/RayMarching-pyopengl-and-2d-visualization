@@ -1,30 +1,89 @@
 VERTEX_SHADER = """
 #version 330 core
 layout(location = 0) in vec3 vPos;
+//uniform mat4 u_view;
+uniform mat4 u_projection;
+uniform mat4 u_model;
 void main()
 {
-    gl_Position = vec4(vPos, 1.0);
+
+    gl_Position =  vec4(vPos, 1.0);
 }
 """
 
 FRAGMENT_SHADER = """
 #version 330 core
 #define fragCoord gl_FragCoord.xy
+
 uniform vec2  u_mouse;
 uniform float u_time;
 uniform vec2  u_resolution;
+
+uniform mat4 u_view;
+uniform mat4 u_projection;
+
 out vec4 fragColor;
+
+float intersectSDF(float distA, float distB) {
+    return max(distA, distB);
+}
+
+float unionSDF(float distA, float distB) {
+    return min(distA, distB);
+}
+
+float differenceSDF(float distA, float distB) {
+    return max(distA, -distB);
+}
 
 float SDFsphere(vec3 pos, float radius)
 {
     return length(pos) - radius;
 }
 
-float WorldSDF(in vec3 pos)
-{
-    float sphere_0 = SDFsphere(pos, 2.5);
-    return sphere_0;
+float SDFspheres (vec3 p) {
+    float l = length(p);
+    float s = 5.0;
+    vec3 sphere = vec3(0.0, 0.0, 0.0);
+    return length(mod(sphere.xyz - p, s) - vec3(s/2.0)) - u_time * sin(0.1) ;
 }
+
+
+float SDFcube( vec3 p, vec3 b )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+float SDFroundedCube( vec3 p, vec3 b, float r )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0) - r;
+}
+
+float SDFtorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}
+
+float WeirdDisplacement(vec3 pos, float val){
+    float displ = sin(4.0 * pos.x) * cos(4.0 * pos.y) * sin(4.0 * pos.z) * 0.25 * val;
+    return displ;
+}
+
+//scene informations
+float WorldSDF(in vec3 p)
+{
+    //float torus = SDFtorus(p, vec2(1.0, 0.5));
+    float sphere = SDFsphere(p, 1.0);
+    float plane = dot(p + vec3(0, 1, 0), normalize(vec3(0, 1, 0)) ) ;
+    float dist = min(sphere, plane);
+
+    return sphere;
+}
+
+
 
 mat4 viewMatrix(vec3 eye, vec3 center, vec3 up) {
 	vec3 f = normalize(center - eye);
@@ -48,11 +107,13 @@ vec3 surface_normal(in vec3 pos)
     return normalize(normal);
 }
 
-vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction)
+
+
+vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction, vec3 gradColor)
 {
     float total_distance_traveled = 0.0;
     const int n_steps = 32;
-    const float min_hit = 0.001;
+    const float min_hit = 0.0001;
     const float max_distance = 1000.0;
 
     for (int i = 0; i < n_steps; ++i)
@@ -65,13 +126,16 @@ vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction)
             // in case we hit something
             vec3 normal = surface_normal(current_position);
 
-            vec3 light_position = vec3(-u_mouse.x, u_mouse.y, 3.0);
+            vec3 light_position = vec3(0, 5, 7.0);
 
             vec3 direction_to_light = normalize(current_position - light_position);
 
-            float diffuse_intensity = max(0.0, pow(dot(normal, direction_to_light), 14.0));
+            float diffuse_intensity = max(0.0, pow(dot(normal, direction_to_light), 2.0));
 
-            return normal * 0.5 + 0.5 * diffuse_intensity;
+            //return normal * 0.5 + 0.5 * diffuse_intensity;
+            //return gradColor * diffuse_intensity;
+
+            return vec3(1.0) * diffuse_intensity;
         }
 
         if (total_distance_traveled > max_distance) // miss
@@ -83,17 +147,23 @@ vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction)
 
     //didn't hit anything return background
     return vec3(0.0);
+    //return gradColor.xyz
 }
+
+
+
 void main()
 {
     vec2 uv = fragCoord / u_resolution.xy * 2.0 - 1.0;
     uv.x *= u_resolution.x / u_resolution.y;
 
-    vec3 camera_position = vec3(0.0, 0.0, -5.0);
-    vec3 ray_origin = camera_position;
+    //vec3 ray_origin = vec3(0.2, 0.1, -5.0 + sin(cos(u_time)));
+    vec3 ray_origin = vec3(0.0, 0.0, -5.0 );
     vec3 ray_direction = vec3(uv, 1.0);
 
-    vec3 color = ray_march(ray_origin, ray_direction);
+    vec3 gradColor = 0.5 + 0.5 * cos(u_time + uv.xyx + vec3(0.0, 2.0, 4.0));
+
+    vec3 color = ray_march(ray_origin , ray_direction, gradColor);
     fragColor = vec4(color, 1.0);
 }
 """
