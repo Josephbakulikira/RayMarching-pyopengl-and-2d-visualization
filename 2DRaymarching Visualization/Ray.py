@@ -3,8 +3,6 @@ import numpy as np
 from math import cos , sin, radians, sqrt
 from Functions import normalize, SignedDistance, offScreen
 
-activeColor = (249, 129, 58)
-
 class Ray:
     def __init__(self, x, y, angle, screen, color):
         self.position = [x, y]
@@ -46,7 +44,7 @@ class Ray:
 
             pygame.draw.circle(self.screen, self.color, (int(self.x_position), int( self.y_position)), 4)
 
-            closest.display(self.screen, activeColor)
+            closest.display(self.screen, (249, 129, 58))
 
             if offScreen([self.x_position, self.y_position], 1920, 1080):
                 break

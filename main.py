@@ -1,27 +1,31 @@
 from __future__ import division
+import sys
 import pygame
 from pygame.locals import *
 from shader import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from numpy import array
+from numpy import array, linalg, frombuffer, fromstring, short
 from OpenGL.GL import shaders
 from sys import exit as exitsystem
 from math import cos, sin, pi
 from Vector import *
 from utils import *
 
+
 class Main(object):
     def __init__(self):
         pygame.init()
-        self.resolution = 1920, 1080
+        self.resolution = 800, 600
         #self.camera = Camera(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.2)
         #self.projectionMatrix = perspective_fov(45.0, self.resolution[0]/self.resolution[1], 0.1, 100.0)
         self.identity = np.array([ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         pygame.display.set_mode(self.resolution, DOUBLEBUF | OPENGL)
         pygame.display.set_caption('Ray Marching')
 
-
+        self.clock = pygame.time.Clock()
+        self.clock.tick(60)
+        
         # quad vertices
         self.vertices = array([-1.0, -1.0, 0.0,
                                 1.0, -1.0, 0.0,
@@ -35,6 +39,7 @@ class Main(object):
         # Uniform variables
         self.uniformMouse = glGetUniformLocation(self.shader, 'u_mouse')
         self.uniformTime = glGetUniformLocation(self.shader, 'u_time')
+        self.uniformValue = glGetUniformLocation(self.shader, 'u_value')
         #self.uniformProjection = glGetUniformLocation(self.shader, 'u_projection')
         self.uniformModel = glGetUniformLocation(self.shader, 'u_model')
         glUseProgram(self.shader)
@@ -58,10 +63,12 @@ class Main(object):
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
 
-        self.clock = pygame.time.Clock()
+
 
     def mainloop(self):
+
         while 1:
+            #print(visualizer(self.num, self.wave_data, self.nframes))
             delta = self.clock.tick(8192)
             deltaTime = delta/1000.0
             glClearColor(0.0, 0.0, 0.0, 1.0)
@@ -88,13 +95,13 @@ class Main(object):
 
             glUniform2f(self.uniformMouse, mx, my)
             glUniform1f(self.uniformTime, pygame.time.get_ticks() / 1000.0)
-
             # binding vertex arrays objects
             glBindVertexArray(self.vao)
             glDrawArrays(GL_QUADS, 0, 4)
 
             pygame.display.set_caption("Program FPS: {}".format(self.clock.get_fps()))
             pygame.display.flip()
+
 
 
 if __name__ == '__main__':

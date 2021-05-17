@@ -1,17 +1,3 @@
-VERTEX_SHADER = """
-#version 330 core
-layout(location = 0) in vec3 vPos;
-//uniform mat4 u_view;
-uniform mat4 u_projection;
-uniform mat4 u_model;
-void main()
-{
-
-    gl_Position = vec4(vPos, 1.0);
-}
-"""
-
-FRAGMENT_SHADER = """
 #version 330 core
 #define fragCoord gl_FragCoord.xy
 
@@ -23,16 +9,16 @@ uniform mat4 u_view;
 uniform mat4 u_projection;
 out vec4 fragColor;
 
-float intersectSDF(float distA, float distB) {
-    return max(distA, distB);
+float intersectSDF(float A, float B) {
+    return max(A, B);
 }
 
-float unionSDF(float distA, float distB) {
-    return min(distA, distB);
+float unionSDF(float A, float B) {
+    return min(A, B);
 }
 
-float differenceSDF(float distA, float distB) {
-    return max(distA, -distB);
+float differenceSDF(float A, float distB) {
+    return max(A, -B);
 }
 
 float SDFsphere(vec3 pos, float radius)
@@ -171,4 +157,3 @@ void main()
     vec3 color = ray_march(ray_origin , ray_direction, gradColor);
     fragColor = vec4(color, 1.0);
 }
-"""
