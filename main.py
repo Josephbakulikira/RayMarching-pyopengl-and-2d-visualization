@@ -2,7 +2,6 @@ from __future__ import division
 import sys
 import pygame
 from pygame.locals import *
-from shader import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from numpy import array, linalg, frombuffer, fromstring, short
@@ -12,11 +11,19 @@ from math import cos, sin, pi
 from Vector import *
 from utils import *
 
+def ReadFile(filename):
+    data = ""
+    with open(filename, 'r') as f:
+        data = f.read()
+    return data
+
+VERTEX_SHADER = ReadFile("./vertexShader.glsl")
+FRAGMENT_SHADER = ReadFile("./fragmentShader.glsl")
 
 class Main(object):
     def __init__(self):
         pygame.init()
-        self.resolution = 800, 600
+        self.resolution = 1920, 1080
         #self.camera = Camera(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.2)
         #self.projectionMatrix = perspective_fov(45.0, self.resolution[0]/self.resolution[1], 0.1, 100.0)
         self.identity = np.array([ [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])

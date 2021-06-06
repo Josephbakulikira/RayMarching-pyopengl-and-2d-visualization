@@ -1,17 +1,3 @@
-VERTEX_SHADER = """
-#version 330 core
-layout(location = 0) in vec3 vPos;
-//uniform mat4 u_view;
-uniform mat4 u_projection;
-uniform mat4 u_model;
-void main()
-{
-
-    gl_Position = vec4(vPos, 1.0);
-}
-"""
-
-FRAGMENT_SHADER = """
 #version 330 core
 #define fragCoord gl_FragCoord.xy
 
@@ -72,20 +58,24 @@ float WeirdDisplacement(vec3 pos, float val){
     return displ;
 }
 
-
+mat2 Rot(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
 
 //scene informations
 float WorldSDF(in vec3 p)
 {
     float torus = SDFtorus(p, vec2(1.0, 0.5));
-    float sphere = SDFsphere(p, sin(u_time));
-    //float modSphere = SDFsphereMod(p, 5.0);
+    float sphere = SDFsphere(p, 1);
+    float modSphere = SDFsphereMod(p, 5.0);
     //float plane = dot(p + vec3(0, 1, 0), normalize(vec3(0, 1, 0)));
-    float displacements = WeirdDisplacement(p, u_time);
+    //float displacements = WeirdDisplacement(p, u_time);
     //float sphereTorus = differenceSDF(sphere, torus);
     float c = 5.0;
     vec3 q = mod(p+0.5*c,c)-0.5*c;
-    return sphere + displacements;
+    return torus ;
 }
 
 
@@ -137,10 +127,10 @@ vec3 ray_march(in vec3 ray_origin, in vec3 ray_direction, vec3 gradColor)
 
             float diffuse_intensity = max(0.0, pow(dot(normal, direction_to_light), 2.0));
 
-            //return normal * 0.5 + 0.5 * diffuse_intensity;
-            return gradColor * diffuse_intensity;
+            return normal * 0.5 + 0.5 * diffuse_intensity;
+            //return gradColor * diffuse_intensity;
 
-            //return vec3(1.0) * diffuse_intensity ;
+            //return vec3(1.0) * diffuse_intensity ; //gray scale
         }
 
         if (total_distance_traveled > max_distance) // miss
@@ -171,4 +161,3 @@ void main()
     vec3 color = ray_march(ray_origin , ray_direction, gradColor);
     fragColor = vec4(color, 1.0);
 }
-"""
